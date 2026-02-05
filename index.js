@@ -1,22 +1,14 @@
-const express = require('express');
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const app = express();
-const port = process.env.PORT || 8080;
+const { spawn, execSync } = require('child_process');
 
-app.get('/', (req, res) => res.send('<h1>Server Online</h1>'));
-app.get('/sub', (req, res) => {
-  const subFile = path.join(__dirname, 'sub.txt');
-  if (fs.existsSync(subFile)) res.sendFile(subFile);
-  else res.status(404).send('Nodes generating, please wait 10s...');
-});
+// ... 之前的 express 代码保持不变 ...
 
-app.listen(port, () => console.log(`HTTP Server running on port ${port}`));
+// 增加自动赋权逻辑
+try {
+  execSync('chmod +x ./entrypoint.sh');
+  console.log('Successfully set execution permission for entrypoint.sh');
+} catch (err) {
+  console.error(`Failed to set permission: ${err.message}`);
+}
 
-// 关键：使用 spawn 实时把后台脚本的日志“导流”到控制台
 const child = spawn('sh', ['./entrypoint.sh']);
-
-child.stdout.on('data', (data) => console.log(`[SCRIPT OUTPUT]: ${data}`));
-child.stderr.on('data', (data) => console.error(`[SCRIPT ERROR]: ${data}`));
-child.on('close', (code) => console.log(`Background script exited with code ${code}`));
+// ... 后续的 stdout/stderr 监听保持不变 ...
